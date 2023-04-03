@@ -52,15 +52,17 @@ local primary_grammar = {
 		pattern = "var%s+([_%a][_%w]*)(.-)$",
 		analyser = function(index, parent, key, after)
 			if not analyser.issafe(key) then
-				syntaxerror(index, "Invalid variable name")
+				analyser.error(index, "Non-valid variable name")
 			end
-			local value = string.match(after, "%s*=%s*([_\"%w%(%[].-)$")
+			local value = string.match(after, "%s*=%s*(.-)$")
 			if string.len(after) > 0 and not value then
-				syntaxerror(index, "Invalid variable declaration")
+				analyser.error(index, "Misshaped variable declaration")
+			end
+			if value and not analyser.issafe(value, "string", "number", "boolean", "record", "variable", "functioncall") then
+				analyser.error(index, "Invalid variable value")
 			end
 			return {
 				keyword = "variable",
-				storage = (parent_keyword and not(parent_keyword == "global" or parent_keyword == "prototype")) and "local" or nil,
 				body = {
 					{
 						keyword = "assignment",
@@ -276,3 +278,25 @@ local secondary_grammar = {
 	end;
 
 }
+
+return (function()
+	local __default__ = {}
+	function __default__:generate(parent_node, line_content, line_index)
+		if parent_node.keyword == "comment" then
+			return line_content
+		end
+		local node
+		for keyword, descriptor in pairs(primary_grammar) do
+			if string.match(line_content, "^(%w+)") == keyword then
+				if string.match(line_content, descriptor.pattern) then
+					string.gsub(line_content, descriptor.pattern, function(...)
+						node = descriptor.analyser(line_index, parent_node.keyword, ...)
+					end)
+					return node
+				end
+			end
+		end
+		analyser.error(line_index)
+	end
+	return __default__
+end)()

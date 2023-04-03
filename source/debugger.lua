@@ -8,7 +8,6 @@ end
 
 local order = {
 	"keyword",
-	"storage",
 	"key",
 	"value",
 	"before",
