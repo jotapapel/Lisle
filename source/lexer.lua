@@ -50,9 +50,9 @@ local primary_grammar = {
 	
 	["var"] = {
 		pattern = "var%s+([_%a][_%w]*)(.-)$",
-		analyser = function(index, parent_keyword, key, after)
-			if not analyser.issafe(key, "key") then
-				syntaxerror(index, "Variable name cannot be a reserved keyword")
+		analyser = function(index, parent, key, after)
+			if not analyser.issafe(key) then
+				syntaxerror(index, "Invalid variable name")
 			end
 			local value = string.match(after, "%s*=%s*([_\"%w%(%[].-)$")
 			if string.len(after) > 0 and not value then
