@@ -9,21 +9,20 @@ local patterns = {
 	["record"] = "^%b[]$"
 }
 
-local function syntaxerror(index, msg)
+local function error(index, msg)
 	msg = msg and (". (" .. msg .. ")") or "."
 	io.write("Lisle: Syntax error in line " .. tostring(index) .. msg .. "\n")
 	os.exit() 
 end
 
 local function safe(str, ...)
+	for keyword in string.gmatch(patterns["keywords"], "%w+") do
+		if str == keyword then
+			return false
+		end
+	end
 	for _, check in ipairs({...}) do
-		if check == "keyword" then
-			for _, keyword in string.gmatch(patterns["keywords"], "%w+") do
-				if str == keyword then
-					return false
-				end
-			end
-		elseif type(patterns[check]) == "string" then
+		if type(patterns[check]) == "string" then
 			if not string.match(str, patterns[check]) then
 				return false
 			end
@@ -39,5 +38,7 @@ local function safe(str, ...)
 	return true
 end
 
-local str = "func"
-print(safe(str, "keyword", "key"))
+return {
+	error = error,
+	issafe = safe
+}

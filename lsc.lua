@@ -1,1 +1,3 @@
-print(32 + 2 - 120)
+debugger = require "source.debugger"
+analyser = require "source.analyser"
+lexer = require "source.lexer"
