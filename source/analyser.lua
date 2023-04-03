@@ -16,9 +16,14 @@ local function syntaxerror(index, msg)
 end
 
 local function safe(str, ...)
+	for _, check in ipairs({...}) do
 	
+		if not string.match(str, patterns[check]) or string.sub(str, -1) == "." then
+			return false
+		end
+	end
+	return true
 end
 
-return {
-	error = syntaxerror
-}
+local str = "991.12"
+print(safe(str, "number"))
