@@ -17,13 +17,27 @@ end
 
 local function safe(str, ...)
 	for _, check in ipairs({...}) do
-	
-		if not string.match(str, patterns[check]) or string.sub(str, -1) == "." then
+		if check == "keyword" then
+			for _, keyword in string.gmatch(patterns["keywords"], "%w+") do
+				if str == keyword then
+					return false
+				end
+			end
+		elseif type(patterns[check]) == "string" then
+			if not string.match(str, patterns[check]) then
+				return false
+			end
+		elseif type(patterns[check]) == "function" then
+			if not patterns[check](str) then
+				return false
+			end
+		end
+		if string.sub(str, -1) == "." then
 			return false
 		end
 	end
 	return true
 end
 
-local str = "991.12"
-print(safe(str, "number"))
+local str = "func"
+print(safe(str, "keyword", "key"))
