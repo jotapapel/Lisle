@@ -1,7 +1,7 @@
 rem this is a record
-
 var myRecord = []
 	myOtherVariable = 99
 	myVariable
 someVariable = 99
-
+func main()
+	return true

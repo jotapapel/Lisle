@@ -1,0 +1,47 @@
+{
+	"keyword": "global",
+	"body": [
+		{
+			"keyword": "comment",
+			"body": [
+				"this is a record"
+			]
+		},
+		{
+			"keyword": "variable",
+			"body": [
+				{
+					"keyword": "assignment",
+					"value": "{}",
+					"key": "myRecord"
+				},
+				{
+					"keyword": "assignment",
+					"value": "99",
+					"key": "myOtherVariable"
+				},
+				{
+					"keyword": "assignment",
+					"value": "nil",
+					"key": "myVariable"
+				}
+			]
+		},
+		{
+			"keyword": "assignment",
+			"value": "99",
+			"key": "someVariable"
+		},
+		{
+			"keyword": "function",
+			"value": [],
+			"body": [
+				{
+					"keyword": "return",
+					"value": "true"
+				}
+			],
+			"key": "main"
+		}
+	]
+}
