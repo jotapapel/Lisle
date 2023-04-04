@@ -1,0 +1,21 @@
+{
+	"body": [
+		{
+			"body": [
+				"this is a record"
+			],
+			"keyword": "comment"
+		},
+		{
+			"body": [
+				{
+					"keyword": "assignment",
+					"key": "myRecord",
+					"value": "{}"
+				}
+			],
+			"keyword": "variable"
+		}
+	],
+	"keyword": "global"
+}
