@@ -1,3 +1,7 @@
 rem this is a record
+
 var myRecord = []
-	myOtherVariable = false
+	myOtherVariable = 99
+	myVariable
+someVariable = 99
+
