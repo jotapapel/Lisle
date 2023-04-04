@@ -1,2 +1,3 @@
 rem this is a record
-var myRecord = a99
+var myRecord = []
+	myOtherVariable = false

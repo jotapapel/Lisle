@@ -1,15 +1,17 @@
 {
-    "version": "0.1.0",
-    "command": "lua54",
-    "tasks": [
-        {
-            "taskName": "Lua",
-			"isBuildCommand": true,
-			"suppressTaskName": true,
-            "showOutput": "always",
-            "args": [
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Lua file",
+			"type": "shell",
+			"command": "lua",
+			"args": [
 				"${file}"
-			]
-        }
-    ]
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
+	]
 }

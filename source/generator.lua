@@ -1,6 +1,2 @@
-function isvariable(str)
-
-end
-
-local str = "myRecord.func.value"
-print(isvariable(str))
+local str = "_var = 32"
+print(string.match(str, "^(.-)%s*=%s*(.-)$"))

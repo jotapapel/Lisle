@@ -1,302 +1,294 @@
 local function slice(str, token, repl)
-	local parts, newstr = {}, string.gsub(str .. token, "\".-\"]", function(s) return string.gsub(s, "%s+", "\0") end)
-	for part in string.gmatch(newstr, "(.-)" .. token) do
-		part = string.gsub(part, "%z+", string.char(32))
-		if string.len(part) > 0 then
-			if type(repl) == "function" then
-				part = repl(part)
-			end
-			table.insert(parts, part)
-		end
-	end
-	return parts
+    local parts, newstr = {}, string.gsub(str .. token, "\".-\"]", function(s)
+        return string.gsub(s, "%s+", "\0")
+    end)
+    for part in string.gmatch(newstr, "(.-)" .. token) do
+        part = string.gsub(part, "%z+", string.char(32))
+        if string.len(part) > 0 then
+            if type(repl) == "function" then
+                part = repl(part)
+            end
+            table.insert(parts, part)
+        end
+    end
+    return parts
 end
 
 local function substitute(str)
-	if not str then
-		return
-	end
-	
-	str = string.gsub(str, "(.?)(%b[])", function(head, body)
-		if not string.match(head, "[%w%]%)]") then
-			local parts = slice(string.match(body, "%[(.-)%]"), ",", function(part)
-				local k, v = string.match(part, "^%s*(.-):%s+(.-)$")
-				if not k and not v then
-					return part
-				end
-				return "[\"".. k  .."\"]" .. " = " .. v
-			end)
-			return head .. "{" .. table.concat(parts, ", ") .. "}"
-		end
-		return head .. body
-	end)
+    if not str then
+        return
+    end
 
-	return str
+    str = string.gsub(str, "(.?)(%b[])", function(head, body)
+        if not string.match(head, "[%w%]%)]") then
+            local parts = slice(string.match(body, "%[(.-)%]"), ",", function(part)
+                local k, v = string.match(part, "^%s*(.-):%s+(.-)$")
+                if not k and not v then
+                    return part
+                end
+                return "[\"" .. k .. "\"]" .. " = " .. v
+            end)
+            return head .. "{" .. table.concat(parts, ", ") .. "}"
+        end
+        return head .. body
+    end)
+
+    return str
 end
 
-local primary_grammar = {
+local grammar = {
 
-	["rem"] = {
-		pattern = "rem%s+(.-)$",
-		analyser = function(index, value)
-			return {
-				keyword = "comment",
-				body = {
-					value
-				}
-			}
-		end
-	};
-	
-	["var"] = {
-		pattern = "var%s+([_%a][_%w]*)(.-)$",
-		analyser = function(index, parent, key, after)
-			if not analyser.issafe(key) then
-				analyser.error(index, "Non-valid variable name")
-			end
-			local value = string.match(after, "%s*=%s*(.-)$")
-			if string.len(after) > 0 and not value then
-				analyser.error(index, "Misshaped variable declaration")
-			end
-			if value and not analyser.issafe(value, "string", "number", "boolean", "record", "variable", "functioncall") then
-				analyser.error(index, "Invalid variable value")
-			end
-			return {
-				keyword = "variable",
-				body = {
-					{
-						keyword = "assignment",
-						key = key,
-						value = substitute(value)
-					}
-				}
-			}
-		end
-	};
+    ["rem"] = {
+        pattern = "rem%s+(.-)$",
+        analyser = function(index, parent, value)
+            return {
+                keyword = "comment",
+                body = {value}
+            }
+        end
+    },
 
-	["func"] = {
-		pattern = "func%s+(.-)%((.-)%)",
-		analyser = function(index, parent_keyword, key, value)
-			if not safe(key, "or", "extvariable", "reserved") then
-				syntaxerror(index, "Invalid function name")
-			end
-			value = slice(value, ",", function(argument)
-				argument = string.match(argument, "^%s*(.-)%s*$")
-				if not string.match(argument, "[_%a][_%w]*") and argument ~= "..." then
-					syntaxerror(index, "Invalid function argument")
-				end
-				return argument
-			end)
-			return {
-				keyword = "function",
-				storage = (parent_keyword and not(parent_keyword == "global")) and "local" or nil,
-				key = key,
-				value = #value > 0 and value or nil,
-				body = {}
-			}
-		end
-	};
+    ["var"] = {
+        pattern = "var%s+([_%a][_%w]*)(.-)$",
+        analyser = function(index, parent, key, after)
+            if not analyser.issafe(key) then
+                analyser.error(index, "Non-valid variable name")
+            end
+            local value = string.match(after, "%s*=%s*(.-)$")
+            if string.len(after) > 0 and not value then
+                analyser.error(index, "Misshaped variable declaration")
+            end
+            if not analyser.issafe(value, "string", "number", "record", "variable-name", "function-call") then
+                analyser.error(index, "Invalid variable value")
+            end
+            return {
+                keyword = "variable",
+                body = {{
+                    keyword = "assignment",
+                    key = key,
+                    value = substitute(value)
+                }}
+            }
+        end
+    },
 
-	["return"] = {
-		pattern = "return%s+(.-)$",
-		analyser = function(index, parent_keyword, value)
-			if not(parent_keyword == "function") then
-				syntaxerror(index, "Keyword used outside function declaration")
-			end
-			return {
-				keyword = "return",
-				value = value
-			}
-		end
-	};
+    ["func"] = {
+        pattern = "func%s+(.-)%((.-)%)",
+        analyser = function(index, parent_keyword, key, value)
+            if not safe(key, "or", "extvariable", "reserved") then
+                syntaxerror(index, "Invalid function name")
+            end
+            value = slice(value, ",", function(argument)
+                argument = string.match(argument, "^%s*(.-)%s*$")
+                if not string.match(argument, "[_%a][_%w]*") and argument ~= "..." then
+                    syntaxerror(index, "Invalid function argument")
+                end
+                return argument
+            end)
+            return {
+                keyword = "function",
+                storage = (parent_keyword and not (parent_keyword == "global")) and "local" or nil,
+                key = key,
+                value = #value > 0 and value or nil,
+                body = {}
+            }
+        end
+    },
 
-	["type"] = {
-		pattern = "type%s+([_%a][_%w]*){(.-)}",
-		analyser = function(index, parent_keyword, key, value)
-			if parent_keyword ~= "global" then
-				syntaxerror(index, "Prototypes cannot be declared inside other structures")
-			end
-			if not safe(key, "only", "reserved") then
-				syntaxerror(index, "Prototype name cannot be a reserved keyword")
-			end
-			value = string.match(value, "^%s*(.-)%s*$")
-			if #value >0 and not string.match(value, "[_%a][_%w]*") then
-				syntaxerror(index, "Parent prototype invalid name")
-			end
-			return {
-				keyword = "prototype",
-				key = key,
-				value = #value > 0 and value or nil,
-				body = {}
-			}
-		end
-	};
+    ["return"] = {
+        pattern = "return%s+(.-)$",
+        analyser = function(index, parent_keyword, value)
+            if not (parent_keyword == "function") then
+                syntaxerror(index, "Keyword used outside function declaration")
+            end
+            return {
+                keyword = "return",
+                value = value
+            }
+        end
+    },
 
-	["if"] = {
-		pattern = "if%s+(.-)$",
-		analyser = function(index, parent_keyword, value)
-			return {
-				keyword = "if",
-				value = value,
-				body = {}
-			}
-		end
-	};
+    ["type"] = {
+        pattern = "type%s+([_%a][_%w]*){(.-)}",
+        analyser = function(index, parent_keyword, key, value)
+            if parent_keyword ~= "global" then
+                syntaxerror(index, "Prototypes cannot be declared inside other structures")
+            end
+            if not safe(key, "only", "reserved") then
+                syntaxerror(index, "Prototype name cannot be a reserved keyword")
+            end
+            value = string.match(value, "^%s*(.-)%s*$")
+            if #value > 0 and not string.match(value, "[_%a][_%w]*") then
+                syntaxerror(index, "Parent prototype invalid name")
+            end
+            return {
+                keyword = "prototype",
+                key = key,
+                value = #value > 0 and value or nil,
+                body = {}
+            }
+        end
+    },
 
-	["elseif"] = {
-		pattern = "if%s+(.-)$",
-		analyser = function(index, parent_keyword, value)
-			return {
-				before = {
-					"if",
-					"elseif"
-				},
-				keyword = "elseif",
-				value = value,
-				body = {}
-			}
-		end
-	};
+    ["if"] = {
+        pattern = "if%s+(.-)$",
+        analyser = function(index, parent_keyword, value)
+            return {
+                keyword = "if",
+                value = value,
+                body = {}
+            }
+        end
+    },
 
-	["else"] = {
-		pattern = "else",
-		analyser = function(index, parent_keyword)
-			return {
-				before = {
-					"if",
-					"elseif"
-				},
-				keyword = "else",
-				body = {}
-			}
-		end
-	};
+    ["elseif"] = {
+        pattern = "if%s+(.-)$",
+        analyser = function(index, parent_keyword, value)
+            return {
+                before = {"if", "elseif"},
+                keyword = "elseif",
+                value = value,
+                body = {}
+            }
+        end
+    },
 
-	["while"] = {
-		pattern = "while%s+(.-)$",
-		analyser = function(index, parent_keyword, value)
-			if string.match(value, "%d+") or string.match(value, "%b\"\"") then
-				syntaxerror(index, "Invalid condition")
-			end
-			return {
-				keyword = "while",
-				value = value,
-				body = {}
-			}
-		end
-	};
+    ["else"] = {
+        pattern = "else",
+        analyser = function(index, parent_keyword)
+            return {
+                before = {"if", "elseif"},
+                keyword = "else",
+                body = {}
+            }
+        end
+    },
 
-	["until"] = {
-		pattern = "until%s+(.-)$",
-		analyser = function(index, parent_keyword, value)
-			if string.match(value, "^%d+$") or string.match(value, "%b\"\"") then
-				syntaxerror(index, "Invalid condition")
-			end
-			return {
-				keyword = "until",
-				value = value,
-				body = {}
-			}
-		end
-	};
+    ["while"] = {
+        pattern = "while%s+(.-)$",
+        analyser = function(index, parent_keyword, value)
+            if string.match(value, "%d+") or string.match(value, "%b\"\"") then
+                syntaxerror(index, "Invalid condition")
+            end
+            return {
+                keyword = "while",
+                value = value,
+                body = {}
+            }
+        end
+    },
 
-	["for"] = {
-		pattern = "for%s+([_%a][_%w]*)%s+=%s+(.-)%s+to%s+(.-)$",
-		analyser = function(index, parent_keyword, key, value, tail)
-			if not safe(value, "or", "number", "extvariable") then
-				syntaxerror(index, "Invalid for loop start value")
-			end
-			local finish, step = string.match(tail, "(.-)%s+step%s+(.-)$")
-			if not finish and not step then
-				finish = tail
-			end
-			if not safe(finish, "or", "number", "extvariable") then
-				syntaxerror(index, "Invalid for loop finish value")
-			end
-			if step and not safe(step, "or", "number", "extvariable") then
-				syntaxerror(index, "Invalid for loop step value")
-			end
-			return {
-				keyword = "numeric-for",
-				value = value,
-				before = finish,
-				after = step,
-				body = {}
-			}
-		end
-	};
+    ["until"] = {
+        pattern = "until%s+(.-)$",
+        analyser = function(index, parent_keyword, value)
+            if string.match(value, "^%d+$") or string.match(value, "%b\"\"") then
+                syntaxerror(index, "Invalid condition")
+            end
+            return {
+                keyword = "until",
+                value = value,
+                body = {}
+            }
+        end
+    },
 
-	["foreach"] = {
-		pattern = "foreach%s+(%b[])%s+in%s+([_%a][_%w%.]*[_%w]*)$",
-		analyser = function(index, parent_keyword, value, after)
-			
-			return {
-				keyword = "numeric-for",
-				value = value,
-				before = finish,
-				after = step,
-				body = {}
-			}
-		end
-	};
+    ["for"] = {
+        pattern = "for%s+([_%a][_%w]*)%s+=%s+(.-)%s+to%s+(.-)$",
+        analyser = function(index, parent_keyword, key, value, tail)
+            if not safe(value, "or", "number", "extvariable") then
+                syntaxerror(index, "Invalid for loop start value")
+            end
+            local finish, step = string.match(tail, "(.-)%s+step%s+(.-)$")
+            if not finish and not step then
+                finish = tail
+            end
+            if not safe(finish, "or", "number", "extvariable") then
+                syntaxerror(index, "Invalid for loop finish value")
+            end
+            if step and not safe(step, "or", "number", "extvariable") then
+                syntaxerror(index, "Invalid for loop step value")
+            end
+            return {
+                keyword = "numeric-for",
+                value = value,
+                before = finish,
+                after = step,
+                body = {}
+            }
+        end
+    },
 
-	["break"] = {
-		pattern = "break",
-		analyser = function(index, parent_keyword)
-			if (parent_keyword == "variable" or parent_keyword == "if" or parent_keyword == "elseif" or parent_keyword == "else") then
-				syntaxerror(index, "Break outside loop")
-			end
-			return {
-				"break"
-			}
-		end
-	};
+    ["foreach"] = {
+        pattern = "foreach%s+(%b[])%s+in%s+([_%a][_%w%.]*[_%w]*)$",
+        analyser = function(index, parent_keyword, value, after)
+
+            return {
+                keyword = "numeric-for",
+                value = value,
+                before = finish,
+                after = step,
+                body = {}
+            }
+        end
+    },
+
+    ["break"] = {
+        pattern = "break",
+        analyser = function(index, parent_keyword)
+            if (parent_keyword == "variable" or parent_keyword == "if" or parent_keyword == "elseif" or parent_keyword ==
+                "else") then
+                syntaxerror(index, "Break outside loop")
+            end
+            return {"break"}
+        end
+    }
 
 }
 local secondary_grammar = {
 
-	["([_%a][_%w%.]*)(.-)$"] = function(index, parent_keyword, key, tail)
-		local keyword
-		local value = string.match(tail, "%((.-)%)")
-		if value then
-			keyword = "call"
-		else
-			keyword = "assignment"
-			value = string.match(tail, "^%s*=%s*([_%w%(%[].-)$")
-			if (parent_keyword == "variable" and string.find(key, "%.")) or (string.len(tail) >= 0 and not value) then
-				if not safe(key, "and", "extvariable", "reserved") then
-					syntaxerror(index)
-				end
-				syntaxerror(index, "Misshaped variable declaration")
-			end
-		end
-		return {
-			keyword = keyword,
-			key = key,
-			value = substitute(value)
-		}
-	end;
+    ["([_%a][_%w%.]*)(.-)$"] = function(index, parent_keyword, key, tail)
+        local keyword
+        local value = string.match(tail, "%((.-)%)")
+        if value then
+            keyword = "call"
+        else
+            keyword = "assignment"
+            value = string.match(tail, "^%s*=%s*([_%w%(%[].-)$")
+            if (parent_keyword == "variable" and string.find(key, "%.")) or (string.len(tail) >= 0 and not value) then
+                if not safe(key, "and", "extvariable", "reserved") then
+                    syntaxerror(index)
+                end
+                syntaxerror(index, "Misshaped variable declaration")
+            end
+        end
+        return {
+            keyword = keyword,
+            key = key,
+            value = substitute(value)
+        }
+    end
 
 }
 
 return (function()
-	local __default__ = {}
-	function __default__:generate(parent_node, line_content, line_index)
-		if parent_node.keyword == "comment" then
-			return line_content
-		end
-		local node
-		for keyword, descriptor in pairs(primary_grammar) do
-			if string.match(line_content, "^(%w+)") == keyword then
-				if string.match(line_content, descriptor.pattern) then
-					string.gsub(line_content, descriptor.pattern, function(...)
-						node = descriptor.analyser(line_index, parent_node.keyword, ...)
-					end)
-					return node
-				end
-			end
-		end
-		analyser.error(line_index)
-	end
-	return __default__
+    local __default__ = {}
+    function __default__:generate(parent, line)
+        local content, index = string.match(line, "^(.-);(%d+)$")
+        if parent.keyword == "comment" then
+            return content
+        end
+        local node
+        for keyword, descriptor in pairs(grammar) do
+            if string.match(content, "^(%w+)") == keyword then
+                if string.match(content, descriptor.pattern) then
+                    string.gsub(content, descriptor.pattern, function(...)
+                        node = descriptor.analyser(index, parent.keyword, ...)
+                    end)
+                    return node
+                end
+            end
+        end
+        analyser.error(index)
+    end
+    return __default__
 end)()
