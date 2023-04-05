@@ -8,23 +8,17 @@
 		},
 		{
 			"value": "0",
-			"step": "a9",
-			"key": "a",
 			"finish": "8",
-			"keyword": "for"
+			"keyword": "for",
+			"step": "2",
+			"key": "a"
 		},
 		{
 			"value": [
 				"a"
 			],
-			"key": "print",
-			"keyword": "call"
-		},
-		{
-			"body": [
-				"testing remote developing"
-			],
-			"keyword": "comment"
+			"keyword": "call",
+			"key": "print"
 		}
 	],
 	"keyword": "global"
