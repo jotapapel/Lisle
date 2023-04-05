@@ -10,43 +10,41 @@
 			"body": [
 				{
 					"key": "myRecord",
-					"value": "{}",
-					"keyword": "assignment"
+					"keyword": "assignment",
+					"value": "{}"
 				},
 				{
 					"key": "myOtherVariable",
-					"value": "99",
-					"keyword": "assignment"
+					"keyword": "assignment",
+					"value": "99"
 				},
 				{
 					"key": "myVariable",
-					"value": "nil",
-					"keyword": "assignment"
+					"keyword": "assignment",
+					"value": "nil"
 				}
 			],
 			"keyword": "variable"
 		},
 		{
 			"key": "someVariable",
-			"value": "99",
-			"keyword": "assignment"
+			"keyword": "assignment",
+			"value": "99"
 		},
 		{
 			"key": "main",
+			"keyword": "function",
 			"body": [
 				{
 					"key": "print",
+					"keyword": "call",
 					"value": [
-						"\"hello",
-						" from main\"",
-						" [2",
-						" 32]"
-					],
-					"keyword": "call"
+						"\"hello, from main\"",
+						" [2, 32]"
+					]
 				}
 			],
-			"value": [],
-			"keyword": "function"
+			"value": []
 		}
 	],
 	"keyword": "global"
