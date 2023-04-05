@@ -1,47 +1,53 @@
 {
-	"keyword": "global",
 	"body": [
 		{
-			"keyword": "comment",
 			"body": [
 				"this is a record"
-			]
+			],
+			"keyword": "comment"
 		},
 		{
-			"keyword": "variable",
 			"body": [
 				{
-					"keyword": "assignment",
+					"key": "myRecord",
 					"value": "{}",
-					"key": "myRecord"
+					"keyword": "assignment"
 				},
 				{
-					"keyword": "assignment",
+					"key": "myOtherVariable",
 					"value": "99",
-					"key": "myOtherVariable"
+					"keyword": "assignment"
 				},
 				{
-					"keyword": "assignment",
+					"key": "myVariable",
 					"value": "nil",
-					"key": "myVariable"
-				}
-			]
-		},
-		{
-			"keyword": "assignment",
-			"value": "99",
-			"key": "someVariable"
-		},
-		{
-			"keyword": "function",
-			"value": [],
-			"body": [
-				{
-					"keyword": "return",
-					"value": "true"
+					"keyword": "assignment"
 				}
 			],
-			"key": "main"
+			"keyword": "variable"
+		},
+		{
+			"key": "someVariable",
+			"value": "99",
+			"keyword": "assignment"
+		},
+		{
+			"key": "main",
+			"body": [
+				{
+					"key": "print",
+					"value": [
+						"\"hello",
+						" from main\"",
+						" [2",
+						" 32]"
+					],
+					"keyword": "call"
+				}
+			],
+			"value": [],
+			"keyword": "function"
 		}
-	]
+	],
+	"keyword": "global"
 }

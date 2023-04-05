@@ -4,4 +4,4 @@ var myRecord = []
 	myVariable
 someVariable = 99
 func main()
-	return true
+	print("hello, from main", [2, 32])
