@@ -1,25 +1,21 @@
 {
+	"keyword": "global",
 	"body": [
 		{
+			"key": "main",
 			"body": [
-				"numeric for loop"
+				{
+					"keyword": "comment",
+					"body": [
+						"this should fail"
+					]
+				}
 			],
-			"keyword": "comment"
-		},
-		{
-			"value": "0",
-			"finish": "8",
-			"keyword": "for",
-			"step": "2",
-			"key": "a"
-		},
-		{
+			"keyword": "function",
 			"value": [
-				"a"
-			],
-			"keyword": "call",
-			"key": "print"
+				"a",
+				"b"
+			]
 		}
-	],
-	"keyword": "global"
+	]
 }

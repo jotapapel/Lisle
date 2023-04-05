@@ -1,3 +1,2 @@
-rem numeric for loop
-for a = 0 to 8 step 2
-	print(a)
+func main(a, b)
+	rem this should fail
