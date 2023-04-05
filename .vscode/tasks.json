@@ -12,6 +12,18 @@
 				"kind": "build",
 				"isDefault": true
 			}
+		},
+		{
+			"label": "Lisle test run",
+			"type": "shell",
+			"command": "lua",
+			"args": [
+				"lib/lsc.lua",
+				"tests/main.le"
+			],
+			"group": {
+				"kind": "test"
+			}
 		}
 	]
 }
