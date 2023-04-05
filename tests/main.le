@@ -5,3 +5,11 @@ var myRecord = []
 someVariable = 99
 func main()
 	print("hello, from main", [2, 32])
+	if true
+		return true
+if a == 32
+	print("yes")
+elseif a == 64
+	print("maybe")
+else
+	print("no")

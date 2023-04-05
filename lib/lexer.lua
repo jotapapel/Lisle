@@ -70,11 +70,13 @@ local grammar = {
 				end
 				return {
 					keyword = "variable",
-					body = {{
-						keyword = "assignment",
-						key = key,
-						value = substitute(value)
-					}}
+					body = {
+						{
+							keyword = "assignment",
+							key = key,
+							value = substitute(value)
+						}
+					}
 				}
 			end
 		},
@@ -91,9 +93,9 @@ local grammar = {
 				local args = slice(value, ",", function(arg)
 					return string.match(arg, "^%s*(.-)%s*$")
 				end)
-				for pos, arg in ipairs(args) do
+				for n, arg in ipairs(args) do
 					if not analyser.typeof(arg, "variable") and arg ~= "..." then
-						analyser.error(index, "Invalid function argument, arg. nº " .. tostring(pos))
+						analyser.error(index, "Invalid function argument, arg. nº " .. tostring(n))
 					end
 				end
 				return {
@@ -103,10 +105,41 @@ local grammar = {
 					body = {}
 				}
 			end
+		},
+		-- control structures
+		["if"] = {
+			pattern = "if%s+(.-)$",
+			analyser = function(index, parent, value)
+				return {
+					keyword = "if",
+					value = value,
+					body = {}
+				}
+			end
+		},
+		["elseif"] = {
+			pattern = "elseif%s+(.-)$",
+			analyser = function(index, parent, value)
+				return {
+					keyword = "elseif",
+					value = value,
+					after = {"if", "elseif"},
+					body = {}
+				}
+			end
+		},
+		["else"] = {
+			pattern = "else$",
+			analyser = function(index, parent, value)
+				return {
+					keyword = "else",
+					after = {"if", "elseif"},
+					body = {}
+				}
+			end
 		}
 	},
-	statements = { --- variable assignment
-	function(index, content, parent)
+	statements = function(index, content, parent)
 		local key, value = string.match(content, "^(.-)%s*=%s*(.-)$")
 		if (key and value) or (analyser.typeof(content, "variable") and parent == "variable") then
 			if (value and not analyser.typeof(value, "boolean", "string", "number", "variable-access", "function-call")) then
@@ -117,33 +150,30 @@ local grammar = {
 				key = key or content,
 				value = value or "nil"
 			}
-		end
-	end, --- function calls
-	function(index, content, parent)
-		if analyser.typeof(content, "function-call") then
+		elseif analyser.typeof(content, "function-call") then
 			local key, value = string.match(content, "^(.-)%((.-)%)")
 			return {
 				keyword = "call",
 				key = key,
 				value = slice(value, ",")
 			}
-		end
-	end, --- return statement
-	function(index, content, parent)
-		local value = string.match(content, "^return%s+(.-)$")
-		if value then
-			if parent ~= "function" then
-				analyser.error(index, "Return statement outside function")
+		elseif string.match(content, "^return%s+(.-)$") then
+			local value = string.match(content, "^return%s+(.-)$")
+			if value then
+				if (value and not analyser.typeof(value, "boolean", "string", "number", "variable-access", "function-call")) then
+					analyser.error(index, "Invalid return value")
+				end
+				return {
+					keyword = "return",
+					value = value
+				}
 			end
-			if (value and not analyser.typeof(value, "boolean", "string", "number", "variable-access", "function-call")) then
-				analyser.error(index, "Invalid return value")
-			end
+		elseif string.match(content, "^break$") then
 			return {
-				keyword = "return",
-				value = value
+				keyword = "break"
 			}
 		end
-	end}
+	end
 }
 return (function()
 	local __default__ = {}
@@ -165,11 +195,7 @@ return (function()
 			end
 		end
 		-- statements
-		for _, analyser in ipairs(grammar.statements) do
-			node = analyser(index, content, parent.keyword) or node
-		end
-		-- default
-		return node or analyser.error(index)
+		return grammar.statements(index, content, parent.keyword) or analyser.error(index)
 	end
 	return __default__
 end)()
