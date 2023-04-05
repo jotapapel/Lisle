@@ -1,5 +1,5 @@
 rem numeric for loop
-for a = 0 to 8
+for a = 0 to 8 step 99a
 	print(a)
 
 rem testing remote developing

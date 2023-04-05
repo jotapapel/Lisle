@@ -78,19 +78,23 @@ local grammar = {
 		["func"] = {
 			pattern = "func%s+(.-)%((.-)%)",
 			analyser = function(index, parent, key, value)
+				local errormsg
 				if not analyser.typeof(key, "variable-access") then
-					analyser.error(index, "Invalid function name")
+					errormsg = "Invalid function name"
+				elseif not string.match(value, "^[_%w%s,]*$") then
+					errormsg = "Misshaped function arguments"
 				end
-				if not string.match(value, "^[_%w%s,]*$") then
-					analyser.error(index, "Misshaped function arguments")
-				end
+				-- parse arguments
+				local argn = 0
 				local args = slice(value, ",", function(arg)
-					return string.match(arg, "^%s*(.-)%s*$")
-				end)
-				for n, arg in ipairs(args) do
+					arg, argn = string.match(arg, "^%s*(.-)%s*$"), argn + 1
 					if not analyser.typeof(arg, "variable") and arg ~= "..." then
-						analyser.error(index, "Invalid function argument, arg. nº " .. tostring(n))
+						analyser.error(index, "Invalid function argument n°" .. tostring(argn))
 					end
+					return arg
+				end)
+				if errormsg then
+					analyser.error(index, errormsg)
 				end
 				return {
 					keyword = "function",
@@ -135,21 +139,27 @@ local grammar = {
 		-- loops
 		["for"] = {
 			pattern = "for%s+(.-)%s+=%s+(.-)%s+to%s+(.-)$",
-			analyser = function(index, parent, key, value, before)
+			analyser = function(index, parent, key, value, after)
+				local errormsg
+				local finish, step = string.match(after, "(.-)%s+step%s+(.-)$")
 				if not analyser.typeof(key, "variable-access") then
-					analyser.error(index, "Invalid variable name")
+					errormsg = "variable name"
+				elseif not analyser.typeof(value, "string", "number", "boolean", "variable-access", "function-call") then
+					errormsg = "variable value"
+				elseif not analyser.typeof(finish or after, "string", "number", "boolean", "variable-access", "function-call") then
+					errormsg = "finish value"
+				elseif step and not analyser.typeof(step, "string", "number", "boolean", "variable-access", "function-call") then
+					errormsg = "step value"
 				end
-				if not analyser.typeof(value, "string", "number", "boolean", "variable-access", "function-call") then
-					analyser.error(index, "Invalid variable value")
-				end
-				if not analyser.typeof(before, "string", "number", "boolean", "variable-access", "function-call") then
-					analyser.error(index, "Invalid finish value")
+				if errormsg then
+					analyser.error(index, "Invalid " .. errormsg)
 				end
 				return {
 					keyword = "for",
 					key = key,
 					value = value,
-					before = before
+					finish = finish or after,
+					step = step
 				}
 			end
 		}

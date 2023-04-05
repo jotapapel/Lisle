@@ -1,24 +1,31 @@
 {
-	"keyword": "global",
 	"body": [
 		{
-			"keyword": "comment",
 			"body": [
 				"numeric for loop"
-			]
+			],
+			"keyword": "comment"
 		},
 		{
-			"before": "8",
+			"value": "0",
+			"step": "a9",
 			"key": "a",
-			"keyword": "for",
-			"value": "0"
+			"finish": "8",
+			"keyword": "for"
 		},
 		{
-			"key": "print",
-			"keyword": "call",
 			"value": [
 				"a"
-			]
+			],
+			"key": "print",
+			"keyword": "call"
+		},
+		{
+			"body": [
+				"testing remote developing"
+			],
+			"keyword": "comment"
 		}
-	]
+	],
+	"keyword": "global"
 }
