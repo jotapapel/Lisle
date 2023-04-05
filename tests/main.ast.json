@@ -1,0 +1,107 @@
+{
+	"keyword": "global",
+	"body": [
+		{
+			"keyword": "comment",
+			"body": [
+				"this is a record"
+			]
+		},
+		{
+			"keyword": "variable",
+			"body": [
+				{
+					"keyword": "assignment",
+					"key": "myRecord",
+					"value": "{}"
+				},
+				{
+					"keyword": "assignment",
+					"key": "myOtherVariable",
+					"value": "99"
+				},
+				{
+					"keyword": "assignment",
+					"key": "myVariable",
+					"value": "nil"
+				}
+			]
+		},
+		{
+			"keyword": "assignment",
+			"key": "someVariable",
+			"value": "99"
+		},
+		{
+			"keyword": "function",
+			"value": [],
+			"key": "main",
+			"body": [
+				{
+					"keyword": "call",
+					"key": "print",
+					"value": [
+						"\"hello, from main\"",
+						" [2, 32]"
+					]
+				},
+				{
+					"keyword": "if",
+					"value": "true",
+					"body": [
+						{
+							"keyword": "return",
+							"value": "true"
+						}
+					]
+				}
+			]
+		},
+		{
+			"keyword": "if",
+			"value": "a == 32",
+			"body": [
+				{
+					"keyword": "call",
+					"key": "print",
+					"value": [
+						"\"yes\""
+					]
+				}
+			]
+		},
+		{
+			"keyword": "elseif",
+			"after": [
+				"if",
+				"elseif"
+			],
+			"value": "a == 64",
+			"body": [
+				{
+					"keyword": "call",
+					"key": "print",
+					"value": [
+						"\"maybe\""
+					]
+				}
+			]
+		},
+		{
+			"keyword": "else",
+			"after": [
+				"if",
+				"elseif"
+			],
+			"body": [
+				{
+					"keyword": "call",
+					"key": "print",
+					"value": [
+						"\"no\""
+					]
+				}
+			]
+		}
+	]
+}
