@@ -1,12 +1,7 @@
 local json = require "lib.json"
 local lexer = require "lib.lexer"
 
----@type string[]
 local parameters = {...}
-
----@param pmtr string
----@return boolean|string
----@return number
 local function parameter(pmtr)
     if pmtr == "$file" then
         return parameters[1]

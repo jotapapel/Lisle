@@ -1,9 +1,5 @@
 local analyser = require "lib.analyser"
 
----@param str string
----@param token string
----@param repl fun(part: string): string
----@return string[]
 local function slice(str, token, repl)
 	local parts, newstr = {}, string.gsub(str .. token, "[%(%[\"].-[\"%]%)]", function(s)
 		return string.gsub(s, token, "\0")
@@ -20,8 +16,6 @@ local function slice(str, token, repl)
 	return parts
 end
 
----@param str string
----@return string
 local function substitute(str)
 	if not str then
 		return
@@ -137,10 +131,32 @@ local grammar = {
 					body = {}
 				}
 			end
+		},
+		-- loops
+		["for"] = {
+			pattern = "for%s+(.-)%s+=%s+(.-)%s+to%s+(.-)$",
+			analyser = function(index, parent, key, value, before)
+				if not analyser.typeof(key, "variable-access") then
+					analyser.error(index, "Invalid variable name")
+				end
+				if not analyser.typeof(value, "string", "number", "boolean", "variable-access", "function-call") then
+					analyser.error(index, "Invalid variable value")
+				end
+				if not analyser.typeof(before, "string", "number", "boolean", "variable-access", "function-call") then
+					analyser.error(index, "Invalid finish value")
+				end
+				return {
+					keyword = "for",
+					key = key,
+					value = value,
+					before = before
+				}
+			end
 		}
 	},
 	statements = function(index, content, parent)
 		local key, value = string.match(content, "^(.-)%s*=%s*(.-)$")
+		-- variable assignment
 		if (key and value) or (analyser.typeof(content, "variable") and parent == "variable") then
 			if (value and not analyser.typeof(value, "boolean", "string", "number", "variable-access", "function-call")) then
 				analyser.error(index, "Invalid variable value")
@@ -150,6 +166,7 @@ local grammar = {
 				key = key or content,
 				value = value or "nil"
 			}
+		-- function call
 		elseif analyser.typeof(content, "function-call") then
 			local key, value = string.match(content, "^(.-)%((.-)%)")
 			return {
@@ -157,6 +174,7 @@ local grammar = {
 				key = key,
 				value = slice(value, ",")
 			}
+		-- return statement
 		elseif string.match(content, "^return%s+(.-)$") then
 			local value = string.match(content, "^return%s+(.-)$")
 			if value then
@@ -168,6 +186,7 @@ local grammar = {
 					value = value
 				}
 			end
+		-- break statement
 		elseif string.match(content, "^break$") then
 			return {
 				keyword = "break"
