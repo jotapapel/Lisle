@@ -89,7 +89,7 @@ local grammar = {
 				end
 				-- parse arguments
 				local argn = 0
-				local args = slice(value, ",", function(arg)
+				value = slice(value, ",", function(arg)
 					arg, argn = string.match(arg, "^%s*(.-)%s*$"), argn + 1
 					if not analyser.typeof(arg, "variable") and arg ~= "..." then
 						analyser.error(index, "Invalid function argument n°" .. tostring(argn))
@@ -103,7 +103,7 @@ local grammar = {
 				return {
 					keyword = "function",
 					key = key,
-					value = args,
+					value = value,
 					body = {}
 				}
 			end
@@ -174,7 +174,7 @@ local grammar = {
 			pattern = "foreach%s+%[(.-)%]%s+in%s+(.-)$",
 			analyser = function(index, parent, keys, value)
 				-- look for syntax errors
-				if not analyser.typeof(value, "variable-access") then
+				if not analyser.typeof(value, "variable-access", "record") then
 					analyser.error(index, "Invalid iterable value")
 				end
 				-- parse keys
@@ -191,6 +191,13 @@ local grammar = {
 					key = keys,
 					value = value
 				}
+			end
+		},
+		-- while loop
+		["while"] = {
+			pattern = "while%s+(.-)$",
+			analyser = function(index, parent, value)
+				--if not analyser.typeof(value, "boolean", "variable-access")
 			end
 		}
 	},
