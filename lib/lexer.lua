@@ -197,7 +197,7 @@ local grammar = {
 		["while"] = {
 			pattern = "while%s+(.-)$",
 			analyser = function(index, parent, value)
-				--if not analyser.typeof(value, "boolean", "variable-access")
+				-- if not analyser.typeof(value, "boolean", "variable-access")
 			end
 		}
 	},
@@ -213,7 +213,7 @@ local grammar = {
 				key = key or content,
 				value = value or "nil"
 			}
-		-- function call
+			-- function call
 		elseif analyser.typeof(content, "function-call") then
 			local key, value = string.match(content, "^(.-)%((.-)%)")
 			return {
@@ -221,7 +221,7 @@ local grammar = {
 				key = key,
 				value = slice(value, ",")
 			}
-		-- return statement
+			-- return statement
 		elseif string.match(content, "^return%s+(.-)$") then
 			local value = string.match(content, "^return%s+(.-)$")
 			if value then
@@ -233,7 +233,7 @@ local grammar = {
 					value = value
 				}
 			end
-		-- break statement
+			-- break statement
 		elseif string.match(content, "^break$") then
 			return {
 				keyword = "break"
