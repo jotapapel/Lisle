@@ -16,24 +16,21 @@ local function slice(str, token, repl)
 	return parts
 end
 
-local function substitute(str)
-	if not str then
-		return
-	end
-	str = string.gsub(str, "(.?)(%b[])", function(head, body)
-		if not string.match(head, "[%w%]%)]") then
-			local parts = slice(string.match(body, "%[(.-)%]"), ",", function(part)
-				local k, v = string.match(part, "^%s*(.-):%s+(.-)$")
-				if not k and not v then
-					return part
+local function totable(chunk)
+	return string.gsub(chunk, "(.?)(%b[])", function(before, content)
+		content = string.gsub(string.match(content, "^%[(.-)%]$"), "%b[]", totable)
+		if not string.match(before, "[%)%]%w]") then
+			local entries = slice(content, ",", function(entry)
+				local key, value = string.match(entry, "^%s*(.-):%s+(.-)$")
+				if not key and not value then
+					return entry
 				end
-				return "[\"" .. k .. "\"]" .. " = " .. v
+				return "[\"" .. key .. "\"]" .. " = " .. value
 			end)
-			return head .. "{" .. table.concat(parts, ", ") .. "}"
+			return before .. "{" .. table.concat(entries, ", ") .. "}"
 		end
-		return head .. body
+		return before .. content
 	end)
-	return str
 end
 
 local grammar = {
@@ -52,15 +49,20 @@ local grammar = {
 		["var"] = {
 			pattern = "var%s+([_%a][_%w]*)(.-)$",
 			analyser = function(index, parent, key, after)
+				-- look for syntax errors
+				local errormsg
 				if not analyser.typeof(key) then
 					analyser.error(index, "Invalid variable name")
 				end
 				local value = string.match(after, "%s*=%s*(.-)$")
 				if string.len(after) > 0 and not value then
-					analyser.error(index, "Misshaped variable declaration")
+					errormsg = "Misshaped variable declaration"
+				elseif not analyser.typeof(value, "string", "number", "record", "variable-access", "function-call") then
+					errormsg = "Invalid variable value"
 				end
-				if not analyser.typeof(value, "string", "number", "record", "variable-access", "function-call") then
-					analyser.error(index, "Invalid variable value")
+				-- throw error if present
+				if errormsg then
+					analyser.error(index, errormsg)
 				end
 				return {
 					keyword = "variable",
@@ -68,7 +70,7 @@ local grammar = {
 						{
 							keyword = "assignment",
 							key = key,
-							value = substitute(value)
+							value = value
 						}
 					}
 				}
@@ -78,6 +80,7 @@ local grammar = {
 		["func"] = {
 			pattern = "func%s+(.-)%((.-)%)",
 			analyser = function(index, parent, key, value)
+				-- look for syntax errors
 				local errormsg
 				if not analyser.typeof(key, "variable-access") then
 					errormsg = "Invalid function name"
@@ -93,6 +96,7 @@ local grammar = {
 					end
 					return arg
 				end)
+				-- throw errors if found
 				if errormsg then
 					analyser.error(index, errormsg)
 				end
@@ -110,7 +114,7 @@ local grammar = {
 			analyser = function(index, parent, value)
 				return {
 					keyword = "if",
-					value = value,
+					value = subtitute(value),
 					body = {}
 				}
 			end
@@ -136,10 +140,11 @@ local grammar = {
 				}
 			end
 		},
-		-- loops
+		-- numeric for
 		["for"] = {
 			pattern = "for%s+(.-)%s+=%s+(.-)%s+to%s+(.-)$",
 			analyser = function(index, parent, key, value, after)
+				-- look for syntax errors
 				local errormsg
 				local finish, step = string.match(after, "(.-)%s+step%s+(.-)$")
 				if not analyser.typeof(key, "variable-access") then
@@ -151,6 +156,7 @@ local grammar = {
 				elseif step and not analyser.typeof(step, "string", "number", "boolean", "variable-access", "function-call") then
 					errormsg = "step value"
 				end
+				-- throw errors if found
 				if errormsg then
 					analyser.error(index, "Invalid " .. errormsg)
 				end
@@ -160,6 +166,30 @@ local grammar = {
 					value = value,
 					finish = finish or after,
 					step = step
+				}
+			end
+		},
+		--- iterator for
+		["foreach"] = {
+			pattern = "foreach%s+%[(.-)%]%s+in%s+(.-)$",
+			analyser = function(index, parent, keys, value)
+				-- look for syntax errors
+				if not analyser.typeof(value, "variable-access") then
+					analyser.error(index, "Invalid iterable value")
+				end
+				-- parse keys
+				local keyn = 0
+				keys = slice(keys, ",", function(key)
+					key, keyn = string.match(key, "^%s*(.-)%s*$"), keyn + 1
+					if not analyser.typeof(key, "variable") then
+						analyser.error(index, "Invalid variable name - n°" .. tostring(keyn))
+					end
+					return key
+				end)
+				return {
+					keyword = "foreach",
+					key = keys,
+					value = value
 				}
 			end
 		}

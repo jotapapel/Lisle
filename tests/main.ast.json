@@ -1,21 +1,26 @@
 {
-	"keyword": "global",
 	"body": [
 		{
-			"key": "main",
+			"body": [
+				"this is a comment",
+				"multiline comment"
+			],
+			"keyword": "comment"
+		},
+		{
 			"body": [
 				{
-					"keyword": "comment",
-					"body": [
-						"this should fail"
-					]
+					"keyword": "call",
+					"value": [
+						"\"hello from Lisle\""
+					],
+					"key": "print"
 				}
 			],
 			"keyword": "function",
-			"value": [
-				"a",
-				"b"
-			]
+			"value": [],
+			"key": "main"
 		}
-	]
+	],
+	"keyword": "global"
 }
