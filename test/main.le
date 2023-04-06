@@ -1,0 +1,4 @@
+rem this is a comment
+	multiline comment
+func main()
+	print("hello from Lisle")

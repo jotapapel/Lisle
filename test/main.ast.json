@@ -1,0 +1,32 @@
+{
+	"keyword": "global",
+	"body": [
+		{
+			"keyword": "comment",
+			"body": [
+				"this is a comment",
+				"multiline comment"
+			]
+		},
+		{
+			"value": [],
+			"key": "main",
+			"keyword": "function",
+			"body": [
+				{
+					"value": [
+						"\"hello from Lisle\""
+					],
+					"key": "print",
+					"keyword": "call"
+				}
+			]
+		},
+		{
+			"keyword": "comment",
+			"body": [
+				"this has been changed"
+			]
+		}
+	]
+}
