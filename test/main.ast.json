@@ -1,1 +1,26 @@
-{"keyword":"global","body":[{"keyword":"comment","body":["this is a comment","multiline comment"]},{"key":"main","body":[{"key":"print","keyword":"call","value":["\"hello from Lisle\""]}],"keyword":"function","value":[]}]}
+{
+	"keyword": "global",
+	"body": [
+		{
+			"keyword": "comment",
+			"body": [
+				"this is a comment",
+				"multiline comment"
+			]
+		},
+		{
+			"key": "main",
+			"body": [
+				{
+					"key": "print",
+					"keyword": "call",
+					"value": [
+						"\"hello from Lisle\""
+					]
+				}
+			],
+			"keyword": "function",
+			"value": []
+		}
+	]
+}
